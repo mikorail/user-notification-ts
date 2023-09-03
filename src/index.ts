@@ -347,7 +347,6 @@ app.post('/send-birthday-messages', async (req, res) => {
         } catch (error) {
           console.error(error)
           console.error(`Error processing user ${user.id}`);
-          break;
         }
       }
     

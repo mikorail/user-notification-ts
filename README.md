@@ -8,5 +8,7 @@ once you have docker
     docker ps
 4. adjust the .env to your liking in docker-compose.yaml
 5. do npm install and do npm run dev
-6. do npx prisma migrate dev --name init
-7. if yo
+6. do npx prisma migrate dev --name init if you want to migrate by using prisma or just use the .sql provided it's up to you
+7. run the service using npm run dev
+
+also theres a postman collection if you want to try 
