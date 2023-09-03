@@ -24,8 +24,8 @@ model User {
 
 model Message {
   id        Int       @id @default(autoincrement())
-  userid    Int       @unique
-  email     String?   @unique
+  userid    Int       
+  email     String?   
   message   String
   status    Boolean?
   sent_at   DateTime?   @db.Timestamptz(3)
@@ -33,4 +33,6 @@ model Message {
   continent String
   city      String
   created_at DateTime?  @default(now()) @db.Timestamptz(3)
+  @@unique([email, userid,status,birthday])
+
 }

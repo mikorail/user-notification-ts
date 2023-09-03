@@ -17,8 +17,7 @@ CREATE TABLE public."Message" (
 	created_at timestamp(3) NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT "Message_pkey" PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX "Message_email_key" ON public."Message" USING btree (email);
-CREATE UNIQUE INDEX "Message_userid_key" ON public."Message" USING btree (userid);
+ALTER TABLE public."Message" ADD CONSTRAINT message_un UNIQUE (email,userid,birthday,status);
 
 -- public."User" definition
 

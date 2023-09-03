@@ -2,9 +2,10 @@ import { PrismaClient,Prisma } from "@prisma/client";
 import express, { Request, Response } from "express";
 import createError from "http-errors"
 import { parse, format } from 'date-fns';
-import { DateTime, Settings,IANAZone } from 'luxon';
+import { DateTime } from 'luxon';
 
 
+var cityTimezones = require('city-timezones');
 interface User {
   id: number;
   first_name: string;
@@ -13,12 +14,32 @@ interface User {
   continent: string;
   city: string;
   birthday?: Date;
+  gen_status:boolean,
 }
+
+interface Message {
+  id: number;
+  userid: number;
+  email?: string;
+  message?: string;
+  status:boolean,
+  sent_at?: Date;
+  created_at?: Date;
+  continent: string;
+  city: string;
+  birthday?: Date;
+}
+
 
 const prisma = new PrismaClient({
   // log: ['query'], // Enable query logging
 });
 const app = express()
+
+const axios = require('axios'); // Import the Axios library
+
+const cron = require('node-cron');
+
 
 app.use(express.json())
 
@@ -157,33 +178,46 @@ app.put('/user/:id', validateBirthday, async (req: Request, res: Response) => {
   const { id } = req.params;
   let { city, continent, birthday } = req.body; // Assuming city, continent, and birthday are in the request body
 
-  // Format city, continent, and birthday
-  city = formatText(city);
-  continent = formatText(continent);
+  // Retrieve the current user's data
+  const currentUser = await prisma.user.findUnique({
+    where: { id: Number(id) },
+  });
+
+  if (!currentUser) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  // Format city, continent, and birthday if they are provided
+  if (city) {
+    city = formatText(city);
+  } else {
+    city = currentUser.city; // Use the current value if not provided
+  }
+
+  if (continent) {
+    continent = formatText(continent);
+  } else {
+    continent = currentUser.continent; // Use the current value if not provided
+  }
 
   try {
-    // Ensure that birthday is in ISO-8601 DateTime format
-    const formattedBirthday = formatDate(birthday);
+    // Ensure that birthday is in ISO-8601 DateTime format if provided
+    if (birthday) {
+      const formattedBirthday = formatDate(birthday);
 
-    if (!formattedBirthday) {
-      return res.status(400).json({ error: 'Invalid birthday format' });
-    }
+      if (!formattedBirthday) {
+        return res.status(400).json({ error: 'Invalid birthday format' });
+      }
 
-    // Retrieve the current user's birthday
-    const currentUser = await prisma.user.findUnique({
-      where: { id: Number(id) },
-    });
-
-    if (!currentUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if the birthday is changing
-    if (currentUser.birthday?.toISOString() !== formattedBirthday) {
-      // Delete messages associated with the old birthday
-      await prisma.message.deleteMany({
-        where: { userid: Number(id), birthday: currentUser.birthday },
-      });
+      // Check if the birthday is changing
+      if (currentUser.birthday && currentUser.birthday.toISOString() !== formattedBirthday) {
+        // Delete messages associated with the old birthday
+        await prisma.message.deleteMany({
+          where: { userid: Number(id), birthday: currentUser.birthday },
+        });
+      }
+    } else {
+      birthday = currentUser.birthday?.toISOString() || null; // Use the current value if not provided
     }
 
     // Update the user's information
@@ -191,9 +225,9 @@ app.put('/user/:id', validateBirthday, async (req: Request, res: Response) => {
       where: { id: Number(id) },
       data: {
         ...req.body,
-        birthday: new Date(formattedBirthday).toISOString(),
-        city: city, // Update the city with the formatted value
-        continent: continent, // Update the continent with the formatted value
+        birthday: birthday ? new Date(birthday).toISOString() : null,
+        city: city,
+        continent: continent,
         gen_status: false,
       },
     });
@@ -253,7 +287,6 @@ function validateBirthday(req: Request, res: Response, next: Function) {
   next();
 }
 
-// Function to parse and format the birthday field
 function formatDate(birthday: string): string | null {
   try {
     // Define an array of possible date formats
@@ -281,11 +314,103 @@ function formatText(text: string): string {
       const restOfWord = word.slice(1).toLowerCase();
       return firstChar + restOfWord;
     })
-    .join('_');
+    .join(' ');
 }
+
+// app.post('/send-birthday-messages', async (req, res) => {
+//   console.log("hit")
+//   try {
+//     const today = new Date();
+//     const currentMonth = today.getMonth() + 1;
+//     const currentDay = today.getDate();
+    
+//     const usersWithSameBirthday : User[] = await prisma.$queryRaw`
+//       SELECT *
+//       FROM "User"
+//       WHERE EXTRACT(MONTH FROM birthday) = ${currentMonth}
+//       AND EXTRACT(DAY FROM birthday) = ${currentDay}
+//       AND EXTRACT(YEAR FROM birthday) <= ${today.getFullYear()}
+//       AND gen_status is false
+//     `;
+
+//     for (const user of usersWithSameBirthday) {
+//       const fullName = `${user.first_name} ${user.last_name}`;
+//       const baseBDay = user?.birthday;
+
+//       const currentTimestamp = new Date().toISOString();
+//       const dateTimestamp = new Date(currentTimestamp);
+
+//       if (baseBDay) {
+//         const isoDateString = new Date(baseBDay).toISOString();
+//         const currentYear = new Date().getFullYear();
+//         const timeZone = `${user.continent}/${user.city}`;
+//         const monthAndDay = isoDateString.slice(5, 10);
+
+//         const combinedDateTime = `${currentYear}-${monthAndDay}T09:00:00+0000`;
+//         const localDateTime = DateTime.fromISO(combinedDateTime, { zone: 'UTC' });
+
+//         const timeUntilEmail = localDateTime.toMillis() - DateTime.now().toMillis();
+//         console.log(timeUntilEmail)
+//         const timeLeft = formatTimeDifference(timeUntilEmail);
+//         const jsDate = localDateTime.toJSDate();
+
+//         console.log(jsDate)
+//         console.log("Time for email : ",user.email ,"Left:", timeLeft);
+
+//         try {
+//           // Check if timeLeft is less than or equal to 0 or less than a minute (60000 ms)
+//           if (timeUntilEmail <= 0 || timeUntilEmail < 60000 || timeUntilEmail < 0 || Number.isNaN(timeUntilEmail)) {
+
+//             await prisma.$queryRaw`
+//               INSERT INTO "Message" ("userid", "message", "status", "city", "continent", "birthday", "email")
+//               VALUES (${user.id}, ${`Happy Birthday to ${fullName}`}, true, ${user.city}, ${user.continent}, ${jsDate}, ${user.email})
+//             `;
+      
+//             await prisma.$queryRaw`
+//               UPDATE "User"
+//               SET "gen_status" = true
+//               WHERE "id" = ${user.id} AND "email" = ${user.email}
+//             `;
+
+//             // Send a request to 'https://email-service.digitalenvision.com.au/send-email'
+//             const emailServiceResponse = await axios.post('https://email-service.digitalenvision.com.au/send-email', {
+//               to: user.email,
+//               subject: 'Happy Birthday!',
+//               message: `Happy Birthday to ${fullName}`,
+//             });
+
+//             console.log('Email service response:', emailServiceResponse.data);
+
+//             if (emailServiceResponse.status === 200) {
+//               // Update the message status and sent_at using the user's email
+//               await prisma.$queryRaw`
+//                 UPDATE "Message"
+//                 SET "status" = true, "sent_at" = ${dateTimestamp}
+//                 WHERE "email" = ${user.email}
+//               `;
+
+//             console.log(`Birthday messages sent to ${usersWithSameBirthday.length} users.`);
+//             res.json({ message: `Birthday messages sent to ${usersWithSameBirthday.length} users.` });
+//             }
+//           }
+//         } catch (error) {
+//           console.error(error);
+//           console.error(`Error processing user ${user.id}`);
+//         }
+//       } else {
+//         console.error("User birthday is not defined.");
+//       }
+//     }
+//   } catch (error) {
+//     console.error('Error sending birthday messages:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
 
 app.post('/send-birthday-messages', async (req, res) => {
   try {
+    let updateCount = 0; // Initialize the count for update operations
+
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // Get the current month (adding 1 because months are 0-indexed)
     const currentDay = today.getDate(); // Get the current day of the month
@@ -299,65 +424,298 @@ app.post('/send-birthday-messages', async (req, res) => {
       and gen_status is false
     `;
     
-    
+    for (const user of usersWithSameBirthday) {
+      const fullName = `${user.first_name} ${user.last_name}`;
 
-      for (const user of usersWithSameBirthday) {
-        const fullName = `${user.first_name} ${user.last_name}`;
+      const baseBDay = user?.birthday;
 
-        const baseBDay = user?.birthday;
+      let timezone = '';
 
-        const currentTimestamp = new Date().toISOString();
-        const dateTimestamp = new Date(currentTimestamp);
+      const cityLookup = cityTimezones.lookupViaCity(`${user.city}`);
+      // timezone = cityLookup[0].timezone;
+      for (const entry of cityLookup) {
+        if (entry.city === user.city && entry.timezone.includes(user.continent)) {
+          timezone = entry.timezone;
+          break;
+        }
+      }
 
-        // Check if baseBDay is defined before using it
-        if (baseBDay) {
-        
-          // Convert baseBDay to an ISO string
-          const isoDateString = new Date(baseBDay).toISOString();
-        
-          // Get the current year
-          const currentYear = new Date().getFullYear();
-          const timeZone = `${user.continent}/${user.city}`
-          // Get the date part
-          const monthAndDay = isoDateString.slice(5, 10);
+      console.log(`The timezone for ${user.city} is ${timezone}`);
 
-          const combinedDateTime = `${currentYear}-${monthAndDay}T09:00:00`;
-          const localDateTime = DateTime.fromISO(combinedDateTime, { zone: timeZone  });
+      const currentTimestamp = new Date().toISOString();
+      const dateTimestamp = new Date(currentTimestamp);
 
-          // Calculate the time until the scheduled email (in milliseconds)
-          const timeUntilEmail = localDateTime.toMillis() - DateTime.now().toMillis();
-          const timeLeft = formatTimeDifference(timeUntilEmail);
-          console.log("Time Left:", timeLeft);
+      if (baseBDay) {
+        const isoDateString = new Date(baseBDay).toISOString();
+        const currentYear = new Date().getFullYear();
+        const timeZone = `${user.continent}/${user.city}`
+        const monthAndDay = isoDateString.slice(5, 10);
 
+        const combinedDateTime = `${currentYear}-${monthAndDay}T09:00:00`;
+        const localDateTime = new Date(combinedDateTime); // Convert to JavaScript Date
+
+        // Calculate the time until the scheduled email (in milliseconds)
+        const timeUntilEmail = localDateTime.getTime() - new Date().getTime();
+        const timeLeft = formatTimeDifference(timeUntilEmail);
+        console.log("User : ", user.email, " has this Time Left:", timeLeft);
+
+        if (timeUntilEmail <= 0 || timeUntilEmail < 60000 || Number.isNaN(timeUntilEmail)) {
+          try {
+            await prisma.$queryRaw`
+              INSERT INTO "Message" ("userid", "message", "status", "city", "continent", "birthday", "email")
+              VALUES (${user.id}, ${`Happy Birthday to ${fullName}`}, false, ${user.city}, ${user.continent}, ${user.birthday}, ${user.email})
+            `;
+
+            await prisma.$queryRaw`
+              UPDATE "User"
+              SET "gen_status" = true
+              WHERE "id" = ${user.id} AND "email" = ${user.email}
+            `;
+            
+            // Send a request to 'https://email-service.digitalenvision.com.au/send-email'
+            const emailServiceResponse = await axios.post('https://email-service.digitalenvision.com.au/send-email', {
+              to: user.email,
+              subject: 'Happy Birthday!',
+              message: `Happy Birthday to ${fullName}`,
+            });
+
+            console.log('Email service response:', emailServiceResponse.data);
+
+            if (emailServiceResponse.status === 200) {
+              // Update the message status and sent_at using the user's email
+              await prisma.$queryRaw`
+                UPDATE "Message"
+                SET "status" = true, "sent_at" = ${dateTimestamp}
+                WHERE "email" = ${user.email}
+              `;
+              
+              updateCount++; // Increment the update count if an update was made
+            }
+          } catch (error) {
+            console.error(error);
+            console.error(`Error processing user ${user.id}`);
+          }
         } else {
           console.error("User birthday is not defined.");
         }
-    
-        try {
-          await prisma.$queryRaw`
-            INSERT INTO "Message" ("userid", "message", "status", "city", "continent", "birthday", "email","sent_at")
-            VALUES (${user.id}, ${`Happy Birthday to ${fullName}`}, true, ${user.city}, ${user.continent}, ${user.birthday}, ${user.email}, ${dateTimestamp})
-          `;
-    
-          await prisma.$queryRaw`
-            UPDATE "User"
-            SET "gen_status" = true
-            WHERE "id" = ${user.id} AND "email" = ${user.email}
-          `;
-        } catch (error) {
-          console.error(error)
-          console.error(`Error processing user ${user.id}`);
-        }
+      } else {
+        console.error("User birthday is not defined.");
       }
-    
+    }
 
-    console.log(`Birthday messages sent to ${usersWithSameBirthday.length} users.`);
-    res.json({ message: `Birthday messages sent to ${usersWithSameBirthday.length} users.` });
+    console.log(`Birthday messages sent to ${updateCount} users.`);
+    res.json({ message: `Birthday messages sent to ${updateCount} users.` });
   } catch (error) {
     console.error('Error sending birthday messages:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+const sendBirthdayMessages = async () => {
+  console.log("hit")
+  try {
+    let updateCount = 0; // Initialize the count for update operations
+
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // Get the current month (adding 1 because months are 0-indexed)
+    const currentDay = today.getDate(); // Get the current day of the month
+    
+    const usersWithSameBirthday : User[] = await prisma.$queryRaw`
+      SELECT *
+      FROM "User"
+      WHERE EXTRACT(MONTH FROM birthday) = ${currentMonth}
+      AND EXTRACT(DAY FROM birthday) = ${currentDay}
+      AND EXTRACT(YEAR FROM birthday) <= ${today.getFullYear()}
+      and gen_status is false
+    `;
+    
+      for (const user of usersWithSameBirthday) {
+        const fullName = `${user.first_name} ${user.last_name}`;
+
+        const baseBDay = user?.birthday;
+        let timezone = '';
+
+        const cityLookup = cityTimezones.lookupViaCity(`${user.city}`);
+        // timezone = cityLookup[0].timezone;
+        for (const entry of cityLookup) {
+          if (entry.timezone.includes(user.continent)) {
+            timezone = entry.timezone;
+            break;
+          }
+        }
+
+        console.log(`The timezone for ${user.city} is ${timezone}`);
+
+        const currentTimestamp = new Date().toISOString();
+        const dateTimestamp = new Date(currentTimestamp);
+
+        if (baseBDay) {
+        
+          const isoDateString = new Date(baseBDay).toISOString();
+        
+          const currentYear = new Date().getFullYear();
+          const timeZone = `${user.continent}/${user.city}`
+          const monthAndDay = isoDateString.slice(5, 10);
+
+          const combinedDateTime = `${currentYear}-${monthAndDay}T09:00:00`;
+          const newBday = new Date(combinedDateTime)
+          const localDateTime = DateTime.fromISO(combinedDateTime, { zone: timezone  });
+
+          // Calculate the time until the scheduled email (in milliseconds)
+          const timeUntilEmail = localDateTime.toMillis() - DateTime.now().toMillis();
+          const timeLeft = formatTimeDifference(timeUntilEmail);
+          console.log("User : ",user.email," have this Time Left:", timeLeft);
+          if (timeUntilEmail <= 0 || timeUntilEmail < 60000 || timeUntilEmail < 0 || Number.isNaN(timeUntilEmail)) {
+
+            try {
+              await prisma.$queryRaw`
+                INSERT INTO "Message" ("userid", "message", "status", "city", "continent", "birthday", "email")
+                VALUES (${user.id}, ${`Happy Birthday to ${fullName}`}, false, ${user.city}, ${user.continent}, ${newBday}, ${user.email})
+              `;
+        
+              await prisma.$queryRaw`
+                UPDATE "User"
+                SET "gen_status" = true
+                WHERE "id" = ${user.id} AND "email" = ${user.email}
+              `;
+                          
+            // Send a request to 'https://email-service.digitalenvision.com.au/send-email'
+            const emailServiceResponse = await axios.post('https://email-service.digitalenvision.com.au/send-email', {
+              email: user.email,
+              message: `Happy Birthday to ${fullName}`,
+            });
+
+            console.log('Email service response:', emailServiceResponse.data);
+
+            if (emailServiceResponse.status === 200) {
+              // Update the message status and sent_at using the user's email
+              await prisma.$queryRaw`
+                UPDATE "Message"
+                SET "status" = true, "sent_at" = ${dateTimestamp}
+                WHERE "email" = ${user.email}
+              `;
+              
+              updateCount++; // Increment the update count if an update was made
+            }
+            } catch (error) {
+              console.error(error)
+              console.error(`Error processing user ${user.id}`);
+            }
+
+          } else {
+            // console.error("User : ",user?.email ,"birthday ",user.birthday,"is not defined.");
+          }
+        }else{
+
+        }
+      }
+    console.log(`Birthday messages sent to ${updateCount} users.`);
+  } catch (error) {
+    console.error('Error sending birthday messages:', error);
+  }
+}
+
+const sweepUnsentMessage = async () => {
+  try {
+    let updateCount = 0; // Initialize the count for update operations
+
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // Get the current month (adding 1 because months are 0-indexed)
+    const currentDay = today.getDate(); // Get the current day of the month
+    
+    const messageWithSameBirthday : Message[] = await prisma.$queryRaw`
+      SELECT *
+      FROM "Message"
+      WHERE EXTRACT(MONTH FROM birthday) = ${currentMonth}
+      AND EXTRACT(DAY FROM birthday) = ${currentDay}
+      AND EXTRACT(YEAR FROM birthday) <= ${today.getFullYear()}
+      and status is false
+    `;
+    
+      for (const message of messageWithSameBirthday) {
+        // const fullName = `${user.first_name} ${user.last_name}`;
+
+        const baseBDay = message?.birthday;
+        let timezone = '';
+
+        const cityLookup = cityTimezones.lookupViaCity(`${message.city}`);
+        // timezone = cityLookup[0].timezone;
+        for (const entry of cityLookup) {
+          if (entry.timezone.includes(message.continent)) {
+            timezone = entry.timezone;
+            break;
+          }
+        }
+
+        console.log(`The timezone for ${message.city} is ${timezone}`);
+
+        const currentTimestamp = new Date().toISOString();
+        const dateTimestamp = new Date(currentTimestamp);
+
+        if (baseBDay) {
+        
+          const isoDateString = new Date(baseBDay).toISOString();
+        
+          const currentYear = new Date().getFullYear();
+          const monthAndDay = isoDateString.slice(5, 10);
+
+          const combinedDateTime = `${currentYear}-${monthAndDay}T09:00:00`;
+          const localDateTime = DateTime.fromISO(combinedDateTime, { zone: timezone  });
+
+          // Calculate the time until the scheduled email (in milliseconds)
+          const timeUntilEmail = localDateTime.toMillis() - DateTime.now().toMillis();
+          const timeLeft = formatTimeDifference(timeUntilEmail);
+          console.log("User : ",message.email," have this Time Left:", timeLeft);
+          if (timeUntilEmail <= 0 || timeUntilEmail < 60000 || timeUntilEmail < 0 || Number.isNaN(timeUntilEmail)) {
+
+            try {
+              // await prisma.$queryRaw`
+              //   INSERT INTO "Message" ("userid", "message", "status", "city", "continent", "birthday", "email")
+              //   VALUES (${user.id}, ${`Happy Birthday to ${fullName}`}, false, ${user.city}, ${user.continent}, ${newBday}, ${user.email})
+              // `;
+        
+              // await prisma.$queryRaw`
+              //   UPDATE "User"
+              //   SET "gen_status" = true
+              //   WHERE "id" = ${user.id} AND "email" = ${user.email}
+              // `;
+                          
+            // Send a request to 'https://email-service.digitalenvision.com.au/send-email'
+            const emailServiceResponse = await axios.post('https://email-service.digitalenvision.com.au/send-email', {
+              email: message.email,
+              message: `${message.message}`,
+            });
+
+            console.log('Email service response:', emailServiceResponse.data);
+
+            if (emailServiceResponse.status === 200) {
+              // Update the message status and sent_at using the user's email
+              await prisma.$queryRaw`
+                UPDATE "Message"
+                SET "status" = true, "sent_at" = ${dateTimestamp}
+                WHERE "email" = ${message.email}
+              `;
+              
+              updateCount++; // Increment the update count if an update was made
+            }
+            } catch (error) {
+              console.error(error)
+              console.error(`Error processing user ${message.id}`);
+            }
+
+          } else {
+            // console.error("User : ",user?.email ,"birthday ",user.birthday,"is not defined.");
+          }
+        }else{
+
+        }
+      }
+    console.log(`Birthday messages sent to ${updateCount} users.`);
+  } catch (error) {
+    console.error('Error sending birthday messages:', error);
+  }
+}
 
 function formatTimeDifference(milliseconds: number): string {
   const seconds = Math.floor(milliseconds / 1000);
@@ -387,7 +745,11 @@ function formatTimeDifference(milliseconds: number): string {
   return formattedTime.join(', ');
 }
 
-// handle 404 error
+cron.schedule('* * * * *', sendBirthdayMessages);
+cron.schedule('* * * * *', sweepUnsentMessage);
+
+
+
 app.use((req: Request, res: Response, next: Function) => {
   next(createError(404))
 })
