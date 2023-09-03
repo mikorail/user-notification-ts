@@ -6,7 +6,7 @@ This guide outlines the steps to set up a project using Docker, PostgreSQL, Pris
 
 1. Ensure you have Docker installed on your system. If you don't have it, you can download and install it from [Docker's official website](https://www.docker.com/get-started).
 
-2. Alternatively, if you have PostgreSQL already installed locally, you can adjust the environment variables and use the schema and seed provided in the repository.
+2. Alternatively, if you have PostgreSQL already installed locally, you can adjust the environment variables and use the schema provided in the repository.
 
 ## Getting Started
 
