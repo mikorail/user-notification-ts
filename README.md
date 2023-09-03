@@ -68,6 +68,17 @@ This guide outlines the steps to set up a project using Docker, PostgreSQL, Pris
 
 - A Postman collection is available for testing the API. You can import it into Postman to try out the endpoints.
 
+### 9. Testing
+
+- You can change the test on test folder and run you app using 
+    ```bash
+    npm run dev
+    ```
+- and run the test using this command :
+    ```bash
+    npm run test
+    ```
+
 ---
 
 You have successfully set up your project with Docker, PostgreSQL, Prisma (optional), and a Node.js service. Feel free to customize the project further according to your requirements.
