@@ -757,3 +757,5 @@ app.use((req: Request, res: Response, next: Function) => {
 app.listen(3000, () =>
   console.log(`⚡️[server]: Server is running at https://localhost:3000`)
 )
+
+export default app; // Export the app instance (optional)
