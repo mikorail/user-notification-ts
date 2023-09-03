@@ -1,0 +1,151 @@
+{
+	"info": {
+		"_postman_id": "dffa9565-af65-49d5-a150-ba08a2722d0d",
+		"name": "User-notification-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "25159393"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"first_name\":\"Will\", // not empty\n    \"last_name\":\"\", // can be empty\n    \"email\":\"Will@gmall.com\", // not empty and unique\n    \"city\":\"St. John's\", // im making sure that it means a capital city of the nation or big for a city to be timezone\n    \"continent\":\"america\", // i mean continent since i just remember that most of timezone use continent\n    \"birthday\":\"1993-09-03\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "localhost:3000/user/"
+			},
+			"response": []
+		},
+		{
+			"name": "Send BDAY MESSAGE",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "localhost:3000/send-birthday-messages"
+			},
+			"response": []
+		},
+		{
+			"name": "Get User",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"first_name\":\"Rizky\",\n    \"last_name\":\"\",\n    \"email\":\"rizky_dewa1@gmail.com\",\n    \"city\":\"South wales\",\n    \"nation\":\"australia\",\n    \"birthday\":\"2002-01-31\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "localhost:3000/user/17"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Users All",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"first_name\":\"Rizky\",\n    \"last_name\":\"\",\n    \"email\":\"rizky_dewa1@gmail.com\",\n    \"city\":\"South wales\",\n    \"nation\":\"australia\",\n    \"birthday\":\"2002-01-31\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/users?limit=3",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"users"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Today User Birthday",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"first_name\":\"Rizky\",\n    \"last_name\":\"\",\n    \"email\":\"rizky_dewa1@gmail.com\",\n    \"city\":\"South wales\",\n    \"nation\":\"australia\",\n    \"birthday\":\"2002-01-31\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "localhost:3000/users/birthday-today"
+			},
+			"response": []
+		},
+		{
+			"name": "Update User",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    // \"first_name\": \"Tandy\",\n    // \"email\": \"Tandy@gmall.com\"\n    // \"continent\": \"America\",\n    \"city\": \"yogyakarta\"\n    // \"birthday\": \"1993-09-02\"\n    // \"first_name\":\"Randy\", // not empty\n    // \"last_name\":\"\", // can be empty\n    // \"email\":\"Randy@gmall.com\", // not empty and unique\n    // \"city\":\"jakarta\", // im making sure that it means a capital city of the nation\n    // \"continent\":\"asia\", // i mean continent since i just remember that most of timezone use continent\n    // \"birthday\":\"1993-09-02\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "localhost:3000/user/15"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete User",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"first_name\":\"Rizky\",\n    \"last_name\":\"\",\n    \"email\":\"rizky_dewa1@gmail.com\",\n    \"city\":\"South wales\",\n    \"nation\":\"australia\",\n    \"birthday\":\"2002-01-31\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "localhost:3000/user/2"
+			},
+			"response": []
+		}
+	]
+}
