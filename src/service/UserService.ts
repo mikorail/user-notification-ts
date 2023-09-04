@@ -18,32 +18,34 @@ export class UserService {
 
   static async createUser(userData: any) {
     const { first_name, last_name, email, city, continent, birthday } = userData;
-
+  
     if (!first_name || !email || !city || !continent || !birthday) {
       throw new Error('Required fields are missing or empty');
     }
-
+  
     const birthdayDate = formatDate(birthday);
-
+  
     if (!birthdayDate) {
       throw new Error('Invalid birthday format');
     }
-
+  
     const parsedBirthday = new Date(birthdayDate);
     const currentDate = new Date();
-
+  
     if (parsedBirthday > currentDate) {
       throw new Error('Birthday date cannot be in the future');
     }
-
+  
     const formattedCity = formatText(city || '');
     const formattedContinent = formatText(continent || '');
-
+  
+    const formattedLastName = last_name || ''; // Set last_name to an empty string if not provided
+  
     try {
       const newUser = await prisma.user.create({
         data: {
           first_name,
-          last_name,
+          last_name: formattedLastName,
           email,
           city: formattedCity,
           continent: formattedContinent,
@@ -51,7 +53,7 @@ export class UserService {
           gen_status: false,
         },
       });
-
+  
       return newUser;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -67,6 +69,7 @@ export class UserService {
       }
     }
   }
+  
 
   static async getUserById(userId: number) {
     try {
