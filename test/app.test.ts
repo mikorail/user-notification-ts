@@ -254,7 +254,7 @@ const randNum = Math.random()
             const newUser = {
                 first_name: 'John',
                 last_name: 'Doe',
-                email: 'john.doe'+randNum+'@example.com',
+                email: 'john.doe'+randNum+'@example2.com',
                 city: 'New York',
                 continent: 'America',
                 birthday: '1990-01-15',
