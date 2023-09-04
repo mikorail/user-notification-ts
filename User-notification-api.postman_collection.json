@@ -20,7 +20,7 @@
 						}
 					}
 				},
-				"url": "localhost:3000/user/"
+				"url": "localhost:3000/api/user/"
 			},
 			"response": []
 		},
@@ -29,7 +29,7 @@
 			"request": {
 				"method": "POST",
 				"header": [],
-				"url": "localhost:3000/send-birthday-messages"
+				"url": "localhost:3000/api/send-birthday-messages"
 			},
 			"response": []
 		},
@@ -50,7 +50,7 @@
 						}
 					}
 				},
-				"url": "localhost:3000/user/17"
+				"url": "localhost:3000/api/user/17"
 			},
 			"response": []
 		},
@@ -72,7 +72,7 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:3000/users?limit=3",
+					"raw": "localhost:3000/api/users?limit=3",
 					"host": [
 						"localhost"
 					],
@@ -107,7 +107,7 @@
 						}
 					}
 				},
-				"url": "localhost:3000/users/birthday-today"
+				"url": "localhost:3000/api/users/birthday-today"
 			},
 			"response": []
 		},
@@ -125,7 +125,7 @@
 						}
 					}
 				},
-				"url": "localhost:3000/user/15"
+				"url": "localhost:3000/api/user/15"
 			},
 			"response": []
 		},
@@ -143,7 +143,7 @@
 						}
 					}
 				},
-				"url": "localhost:3000/user/2"
+				"url": "localhost:3000/api/user/2"
 			},
 			"response": []
 		}

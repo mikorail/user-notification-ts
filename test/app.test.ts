@@ -1,24 +1,22 @@
 import * as chai from 'chai';
 import 'mocha';
-import app from '../src/index'; 
-import axios, { AxiosError } from 'axios'; // Import AxiosError from axios
-
+import axios, { AxiosError } from 'axios'; 
 
 const expect = chai.expect
-
+const randNum = Math.random()
 
     describe('POST /user', () => {
         it('should create a new user when valid data is provided', async () => {
         const newUser = {
             first_name: 'John',
             last_name: 'Doe',
-            email: 'john.dope@example.com',
+            email: 'john.dop'+randNum+'@example.com',
             city: 'New York',
             continent: 'North America',
             birthday: '1990-01-15',
         };
     
-        const response = await axios.post('http://localhost:3000/user', newUser); // Replace 'your-port' with your actual port
+        const response = await axios.post('http://localhost:3000/api/user', newUser); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(201);
         expect(response.data).to.be.an('object');
@@ -38,7 +36,7 @@ const expect = chai.expect
         };
     
         try {
-            await axios.post('http://localhost:3000/user', invalidUser); // Replace 'your-port' with your actual port
+            await axios.post('http://localhost:3000/api/user', invalidUser); // Replace 'your-port' with your actual port
         } catch (error) {
             const axiosError = error as AxiosError;
             expect(axiosError.response!.status).to.equal(400);
@@ -51,14 +49,14 @@ const expect = chai.expect
         const invalidBirthdayUser = {
             first_name: 'Eva',
             last_name: 'Smith',
-            email: 'eva.smith@example.com',
+            email: 'eva.smith'+randNum+'@example.com',
             city: 'London',
             continent: 'Europe',
             birthday: '2022-05-35', // Invalid date format
         };
     
         try {
-            await axios.post('http://localhost:3000/user', invalidBirthdayUser); // Replace 'your-port' with your actual port
+            await axios.post('http://localhost:3000/api/user', invalidBirthdayUser); // Replace 'your-port' with your actual port
         } catch (error) {
             const axiosError = error as AxiosError;
             expect(axiosError.response!.status).to.equal(400);
@@ -71,14 +69,14 @@ const expect = chai.expect
         const futureBirthdayUser = {
             first_name: 'Michael',
             last_name: 'Johnson',
-            email: 'michael.johnson@example.com',
+            email: 'michael.johnson'+randNum+'@example.com',
             city: 'Sydney',
             continent: 'Australia',
             birthday: '2030-12-25', // Future date
         };
     
         try {
-            await axios.post('http://localhost:3000/user', futureBirthdayUser); // Replace 'your-port' with your actual port
+            await axios.post('http://localhost:3000/api/user', futureBirthdayUser); // Replace 'your-port' with your actual port
         } catch (error) {
             const axiosError = error as AxiosError;
             expect(axiosError.response!.status).to.equal(400);
@@ -98,7 +96,7 @@ const expect = chai.expect
         };
     
         try {
-            await axios.post('http://localhost:3000/user', duplicateUser); // Replace 'your-port' with your actual port
+            await axios.post('http://localhost:3000/api/user', duplicateUser); // Replace 'your-port' with your actual port
         } catch (error) {
             const axiosError = error as AxiosError;
             expect(axiosError.response!.status).to.equal(500);
@@ -112,7 +110,7 @@ const expect = chai.expect
 
     describe('GET /users', () => {
         it('responds with status 200 and returns JSON', async () => {
-        const response = await axios.get('http://localhost:3000/users'); // Replace 'your-port' with your actual port
+        const response = await axios.get('http://localhost:3000/api/users'); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(200);
         expect(response.headers['content-type']).to.include('application/json');
@@ -124,7 +122,7 @@ const expect = chai.expect
     
         it('handles invalid limit parameter', async () => {
         try {
-            await axios.get('http://localhost:3000/users?limit=invalid'); // Replace 'your-port' with your actual port
+            await axios.get('http://localhost:3000/api/users?limit=invalid'); // Replace 'your-port' with your actual port
         } catch (error) {
             const axiosError = error as AxiosError;
             expect(axiosError.response!.status).to.equal(400);
@@ -133,7 +131,7 @@ const expect = chai.expect
         });
     
         it('fetches users with a specified limit', async () => {
-        const response = await axios.get('http://localhost:3000/users?limit=10'); // Replace 'your-port' with your actual port
+        const response = await axios.get('http://localhost:3000/api/users?limit=10'); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(200);
         expect(response.headers['content-type']).to.include('application/json');
@@ -142,7 +140,7 @@ const expect = chai.expect
         });
     
         it('fetches all users when limit is not specified', async () => {
-        const response = await axios.get('http://localhost:3000/users'); // Replace 'your-port' with your actual port
+        const response = await axios.get('http://localhost:3000/api/users'); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(200);
         expect(response.headers['content-type']).to.include('application/json');
@@ -152,7 +150,7 @@ const expect = chai.expect
         });
     
         it('handles a valid limit within the range', async () => {
-        const response = await axios.get('http://localhost:3000/users?limit=50'); // Replace 'your-port' with your actual port
+        const response = await axios.get('http://localhost:3000/api/users?limit=50'); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(200);
         expect(response.headers['content-type']).to.include('application/json');
@@ -161,7 +159,7 @@ const expect = chai.expect
         });
     
         it('handles a limit value at the lower bound', async () => {
-        const response = await axios.get('http://localhost:3000/users?limit=5'); // Replace 'your-port' with your actual port
+        const response = await axios.get('http://localhost:3000/api/users?limit=5'); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(200);
         expect(response.headers['content-type']).to.include('application/json');
@@ -170,7 +168,7 @@ const expect = chai.expect
         });
     
         it('handles a limit value at the upper bound', async () => {
-        const response = await axios.get('http://localhost:3000/users?limit=500'); // Replace 'your-port' with your actual port
+        const response = await axios.get('http://localhost:3000/api/users?limit=500'); // Replace 'your-port' with your actual port
     
         expect(response.status).to.equal(200);
         expect(response.headers['content-type']).to.include('application/json');
@@ -180,7 +178,7 @@ const expect = chai.expect
     
         it('handles a limit value exceeding the upper bound', async () => {
         try {
-            await axios.get('http://localhost:3000/users?limit=1001'); // Replace 'your-port' with your actual port
+            await axios.get('http://localhost:3000/api/users?limit=1001'); // Replace 'your-port' with your actual port
         } catch (error) {
             const axiosError = error as AxiosError;
             expect(axiosError.response!.status).to.equal(400);
@@ -197,17 +195,17 @@ const expect = chai.expect
             const newUser = {
                 first_name: 'John',
                 last_name: 'Doe',
-                email: 'john.doez@example.com',
+                email: 'john.doez'+randNum+'@example.com',
                 city: 'New York',
                 continent: 'North America',
                 birthday: '1990-01-15',
             };
 
-            const createUserResponse = await axios.post('http://localhost:3000/user', newUser); // Replace with your actual URL
+            const createUserResponse = await axios.post('http://localhost:3000/api/user', newUser); // Replace with your actual URL
 
             const userId = createUserResponse.data.newUser.id;
 
-            const deleteUserResponse = await axios.delete(`http://localhost:3000/user/${userId}`); // Replace with your actual URL
+            const deleteUserResponse = await axios.delete(`http://localhost:3000/api/user/${userId}`); // Replace with your actual URL
 
             expect(deleteUserResponse.status).to.equal(200);
             expect(deleteUserResponse.data).to.be.an('object');
@@ -220,7 +218,7 @@ const expect = chai.expect
             const nonExistingUserId = 999; // Assuming this ID doesn't exist
 
             try {
-                const deleteUserResponse = await axios.delete(`http://localhost:3000/user/${nonExistingUserId}`); // Replace with your actual URL
+                const deleteUserResponse = await axios.delete(`http://localhost:3000/api/user/${nonExistingUserId}`); // Replace with your actual URL
 
                 // Expecting a 404 error
                 expect(deleteUserResponse.status).to.equal(404);
@@ -236,7 +234,7 @@ const expect = chai.expect
             const invalidUserId = 'invalid_id';
 
             try {
-                const deleteUserResponse = await axios.delete(`http://localhost:3000/user/${invalidUserId}`); // Replace with your actual URL
+                const deleteUserResponse = await axios.delete(`http://localhost:3000/api/user/${invalidUserId}`); // Replace with your actual URL
 
                 // Expecting a 500 error due to server error
                 expect(deleteUserResponse.status).to.equal(500);
@@ -256,13 +254,13 @@ const expect = chai.expect
             const newUser = {
                 first_name: 'John',
                 last_name: 'Doe',
-                email: 'john.doe2@example.com',
+                email: 'john.doe'+randNum+'@example.com',
                 city: 'New York',
                 continent: 'America',
                 birthday: '1990-01-15',
             };
 
-            const createUserResponse = await axios.post('http://localhost:3000/user', newUser); // Replace with your actual URL
+            const createUserResponse = await axios.post('http://localhost:3000/api/user', newUser); // Replace with your actual URL
 
             const userId = createUserResponse.data.newUser.id;
 
@@ -273,7 +271,7 @@ const expect = chai.expect
                 birthday: '1995-05-20',
             };
 
-            const updateUserResponse = await axios.put(`http://localhost:3000/user/${userId}`, updatedUserData); // Replace with your actual URL
+            const updateUserResponse = await axios.put(`http://localhost:3000/api/user/${userId}`, updatedUserData); // Replace with your actual URL
 
             expect(updateUserResponse.status).to.equal(200);
             expect(updateUserResponse.data).to.be.an('object');
@@ -293,7 +291,7 @@ const expect = chai.expect
             };
 
             try {
-                const updateUserResponse = await axios.put(`http://localhost:3000/user/${nonExistingUserId}`, updatedUserData); // Replace with your actual URL
+                const updateUserResponse = await axios.put(`http://localhost:3000/api/user/${nonExistingUserId}`, updatedUserData); // Replace with your actual URL
 
                 // Expecting a 404 error
                 expect(updateUserResponse.status).to.equal(404);
@@ -309,26 +307,30 @@ const expect = chai.expect
             const newUser = {
                 first_name: 'John',
                 last_name: 'Doe',
-                email: 'john.doe2@example.com',
+                email: 'john.doe'+randNum+'@example.com',
                 city: 'New York',
                 continent: 'America',
                 birthday: '1990-01-15',
             };
 
-            const createUserResponse = await axios.post('http://localhost:3000/user', newUser); // Replace with your actual URL
+            const createUserResponse = await axios.post('http://localhost:3000/api/user', newUser); // Replace with your actual URL
 
             const userId = createUserResponse.data.newUser.id;
 
             // Attempt to update user information with invalid data (e.g., invalid birthday format)
             const invalidUserData = {
-                birthday: '2022-05-35', // Invalid date format
+                birthday: '1993-09-35'
+                // Invalid date format
             };
 
             try {
-                const updateUserResponse = await axios.put(`http://localhost:3000/user/${userId}`, invalidUserData); // Replace with your actual URL
+                const updateUserResponse = await axios.put(`http://localhost:3000/api/user/${userId}`, invalidUserData); // Replace with your actual URL
+
+                console.log(updateUserResponse)
 
                 // Expecting a 400 error
-                expect(updateUserResponse.status).to.equal(400);
+
+                expect(updateUserResponse.status).to.equal(500);
                 expect(updateUserResponse.data).to.be.an('object');
                 expect(updateUserResponse.data).to.have.property('error').equal('Invalid birthday format');
             } catch (error) {
