@@ -56,7 +56,15 @@ This guide outlines the steps to set up a project using Docker, PostgreSQL, Pris
 
 - Alternatively, you can use the provided `.sql` file for database setup if you prefer not to use Prisma for migrations. Import the `.sql` file into your PostgreSQL database.
 
-### 7. Run the Node.js Service
+### 7. (Optional) Build the Node.js Service
+
+- If you want to build the Node.js service before running it, you can use the following command:
+
+    ```bash
+    npm run build
+    ```
+
+### 8. Run the Node.js Service
 
 - Start the Node.js service by running:
 
@@ -64,17 +72,20 @@ This guide outlines the steps to set up a project using Docker, PostgreSQL, Pris
     npm run dev
     ```
 
-### 8. Testing with Postman
+### 9. Testing with Postman
 
 - A Postman collection is available for testing the API. You can import it into Postman to try out the endpoints.
 
-### 9. Testing
+### 10. Testing
 
-- You can change the test on test folder and run you app using 
+- You can change the test in the `test` folder and run your app using:
+
     ```bash
     npm run dev
     ```
-- and run the test using this command :
+
+  and run the tests using this command:
+
     ```bash
     npm run test
     ```
