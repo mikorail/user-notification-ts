@@ -10,10 +10,10 @@ const randNum = Math.random()
         const newUser = {
             first_name: 'John',
             last_name: 'Doe',
-            email: 'john.dop'+randNum+'@example.com',
-            city: 'New York',
-            continent: 'North America',
-            birthday: '1990-01-15',
+            email: 'john.doe'+randNum+'@example.com',
+            city: 'Bangkok',
+            continent: 'Asia',
+            birthday: '1990-09-04',
         };
     
         const response = await axios.post('http://localhost:3000/api/user', newUser); // Replace 'your-port' with your actual port
@@ -30,9 +30,9 @@ const randNum = Math.random()
         const invalidUser = {
             first_name: 'Alice',
             email: '',
-            city: 'Los Angeles',
-            continent: 'North America',
-            birthday: '1995-05-20',
+            city: 'Bangkok',
+            continent: 'Asia',
+            birthday: '1990-09-04',
         };
     
         try {
@@ -50,8 +50,8 @@ const randNum = Math.random()
             first_name: 'Eva',
             last_name: 'Smith',
             email: 'eva.smith'+randNum+'@example.com',
-            city: 'London',
-            continent: 'Europe',
+            city: 'Bangkok',
+            continent: 'Asia',
             birthday: '2022-05-35', // Invalid date format
         };
     
@@ -72,7 +72,7 @@ const randNum = Math.random()
             email: 'michael.johnson'+randNum+'@example.com',
             city: 'Sydney',
             continent: 'Australia',
-            birthday: '2030-12-25', // Future date
+            birthday: '2030-09-25', // Future date
         };
     
         try {
@@ -90,9 +90,9 @@ const randNum = Math.random()
             first_name: 'John',
             last_name: 'Doe',
             email: 'john.doe@example.com', // Duplicate email
-            city: 'Paris',
-            continent: 'Europe',
-            birthday: '1985-08-10',
+            city: 'Bangkok',
+            continent: 'Asia',
+            birthday: '1990-09-04',
         };
     
         try {
@@ -196,9 +196,9 @@ const randNum = Math.random()
                 first_name: 'John',
                 last_name: 'Doe',
                 email: 'john.doez'+randNum+'@example.com',
-                city: 'New York',
-                continent: 'North America',
-                birthday: '1990-01-15',
+                city: 'Jakarta',
+                continent: 'Asia',
+                birthday: '1990-09-04',
             };
 
             const createUserResponse = await axios.post('http://localhost:3000/api/user', newUser); // Replace with your actual URL
@@ -308,9 +308,9 @@ const randNum = Math.random()
                 first_name: 'John',
                 last_name: 'Doe',
                 email: 'john.doe'+randNum+'@example.com',
-                city: 'New York',
+                city: 'New Delhi',
                 continent: 'America',
-                birthday: '1990-01-15',
+                birthday: '1990-09-04',
             };
 
             const createUserResponse = await axios.post('http://localhost:3000/api/user', newUser); // Replace with your actual URL
